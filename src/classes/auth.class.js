@@ -6,6 +6,8 @@ import BaseClass from "./base.class.js";
 import logger from "../lib/logger";
 
 import * as authUtils from "../lib/auth";
+import { generateToken } from "../lib/token";
+
 import response from "../lib/response.js";
 
 console.log('REDIS CONFIG', redisConfig.host);
@@ -114,17 +116,25 @@ export default class AuthClass extends BaseClass {
                 }
             }
 
+            const userId = `${email}_${new Date().getTime()}`
+
+            console.log('userId', userId);
+
+            const token = await generateToken(userId);
+            console.log('TOKEN', token);
+
             const userData = {
                 firstName,
                 lastName,
-                email
+                email,
+                userId
             }
 
             await redisClient.set(email, JSON.stringify(userData));
 
             return {
                 ...response.AUTH.CREATE_NEW_USER.SUCCESS,
-                results: userData
+                results: { ...userData, token }
             }
         } catch (error) {
             logger.error(`ERROR: AuthClass-verifyEmailVerificationToken - ${error}`);
@@ -132,4 +142,6 @@ export default class AuthClass extends BaseClass {
 
         }
     }
+
+
 }
