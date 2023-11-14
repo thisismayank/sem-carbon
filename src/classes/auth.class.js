@@ -26,23 +26,16 @@ export default class AuthClass extends BaseClass {
             );
             let user = await redisClient.get(email);
 
-            let isExistingUser = user ? true : false;
+            const isExistingUser = user ? true : false;
 
-            if (isExistingUser) {
-                user = JSON.parse(user);
-                return {
-                    ...response.AUTH.GENERATE_OTP.EXISTING_USER.SUCCESS,
-                    results: { ...user }
-                };
 
-            }
-            const data = await authUtils.generateEmailVerificationToken(email, isLogin)
+            const data = await authUtils.generateEmailVerificationToken(email, isExistingUser)
             logger.debug(`RESULT: AuthClass-sendTokenForEmailVerification: ${JSON.stringify(data)}`)
 
             const { isLogin, resendEmailTokenCount, wrongEmailTokenCount, deviceToken, expiryTime } = data;
 
             return {
-                ...response.AUTH.GENERATE_OTP.EXISTING_USER.SUCCESS,
+                ...response.AUTH.GENERATE_OTP.SEND_GENERATED_OTP.SUCCESS,
                 results: { isLogin, resendEmailTokenCount, wrongEmailTokenCount, deviceToken, expiryTime }
             };
         } catch (error) {
@@ -57,32 +50,42 @@ export default class AuthClass extends BaseClass {
             logger.info(
                 `INFO: AuthClass-verifyEmailVerificationToken - Email: ${email}`
             );
-            const isExistingUser = await redisClient.get(email);
+            let user = await redisClient.get(email);
 
-            const isLogin = isExistingUser ? true : false;
+            const isExistingUser = user ? true : false;
 
 
             const data = await authUtils.isValidEmailToken(email, deviceToken, verificationCode);
             logger.debug(`RESULT: AuthClass-verifyEmailVerificationToken: ${JSON.stringify(data)}`)
-            const { isValid, tokenDetails } = data;
+            const { isValid, tokenDetails, tokenExpired } = data;
 
-            console.log("ISVALUD OUTSIDE", isValid)
 
             if (!isValid) {
-                console.log("ISVALUD", isValid)
                 return {
                     ...response.AUTH.VERIFY_OTP.FAILURE,
                     messageObj: {
-                        wrongEmailTokenCount: tokenDetails.wrongEmailTokenCount,
-                        resendEmailTokenCount: tokenDetails.resendEmailTokenCount,
+                        wrongEmailTokenCount: tokenDetails.wrongEmailTokenCount || 1,
+                        resendEmailTokenCount: tokenDetails.resendEmailTokenCount || 1,
+                        deviceTokenExpired: tokenExpired || false
                     }
+                }
+            }
+
+            if (isExistingUser) {
+                user = JSON.parse(user);
+                const { userId } = user;
+                const token = await generateToken(userId);
+
+                return {
+                    ...response.AUTH.VERIFY_OTP.LOG_IN,
+                    results: { ...user, token }
                 }
             }
 
             return {
                 ...response.AUTH.VERIFY_OTP.SUCCESS,
                 results: {
-                    isLogin: true,
+                    isLogin: false,
                     wrongEmailTokenCount: tokenDetails.wrongEmailTokenCount,
                     resendEmailTokenCount: tokenDetails.resendEmailTokenCount
                 }
@@ -97,7 +100,7 @@ export default class AuthClass extends BaseClass {
     async createNewAccountForUser(email, deviceToken, firstName, lastName, referralCode = "false") {
         try {
             logger.info(
-                `INFO: AuthClass-verifyEmailVerificationToken - Email: ${email}`
+                `INFO: AuthClass-createNewAccountForUser - Email: ${email}`
             );
             const isExistingUser = await redisClient.get(email);
 
@@ -105,11 +108,11 @@ export default class AuthClass extends BaseClass {
 
 
             const { canUserCreateNewAccount } = await authUtils.canUserCreateANewAccount(email, deviceToken);
-            logger.debug(`RESULT: AuthClass-verifyEmailVerificationToken: ${canUserCreateNewAccount}`)
+            logger.debug(`RESULT: AuthClass-createNewAccountForUser: CanUserCreateNewAccount: ${canUserCreateNewAccount}`)
 
             if (!canUserCreateNewAccount) {
                 return {
-                    ...response.AUTH.CREATE_NEW_USER.SUCCESS,
+                    ...response.AUTH.CREATE_NEW_USER.FAILURE,
                     messageObj: {
                         error: "Please go back and start the process"
                     }
@@ -118,10 +121,8 @@ export default class AuthClass extends BaseClass {
 
             const userId = `${email}_${new Date().getTime()}`
 
-            console.log('userId', userId);
-
             const token = await generateToken(userId);
-            console.log('TOKEN', token);
+
 
             const userData = {
                 firstName,
@@ -137,7 +138,7 @@ export default class AuthClass extends BaseClass {
                 results: { ...userData, token }
             }
         } catch (error) {
-            logger.error(`ERROR: AuthClass-verifyEmailVerificationToken - ${error}`);
+            logger.error(`ERROR: AuthClass-createNewAccountForUser - ${error}`);
             throw error;
 
         }

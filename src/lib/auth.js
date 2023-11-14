@@ -111,6 +111,10 @@ export const isValidEmailToken = async (email, deviceToken, token) => {
         return {
             isValid: false,
             tokenExpired: true,
+            tokenDetails: {
+                wrongEmailTokenCount: 4,
+                resendEmailTokenCount: 4
+            }
         };
     }
 };
@@ -124,9 +128,29 @@ export const canUserCreateANewAccount = async (email, deviceToken) => {
     if (!existingToken) {
     }
 
-    existingToken = JSON.parse(existingToken);
-    const { emailTokenVerified, emailVerified } = existingToken;
-    const canUserCreateNewAccount = emailTokenVerified || false;
+    const currentTime = moment();
 
-    return { canUserCreateNewAccount };
+    if (
+        existingToken &&
+        currentTime < moment(JSON.parse(existingToken).expiryTime)
+    ) {
+        existingToken = JSON.parse(existingToken);
+
+        const { emailTokenVerified, emailVerified } = existingToken;
+
+
+        const canUserCreateNewAccount = emailTokenVerified || false;
+
+        return { canUserCreateNewAccount };
+    } else {
+
+        return {
+            isValid: false,
+            tokenExpired: true,
+            tokenDetails: {
+                wrongEmailTokenCount: 4,
+                resendEmailTokenCount: 4
+            }
+        };
+    }
 }

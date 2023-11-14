@@ -38,7 +38,7 @@ const response = {
                     success: true,
                     version: 1,
                     statusCode: "200_000_002",
-                    message: "User logged in successfully.",
+                    message: "OTP generated and sent successfully.",
                     results: {},
                 }
             }
@@ -51,10 +51,17 @@ const response = {
                 message: "OTP verified successfully.",
                 results: {},
             },
+            LOG_IN: {
+                success: true,
+                version: 1,
+                statusCode: "200_000_002",
+                message: "OTP verified and user logged in successfully.",
+                results: {},
+            },
             FAILURE: {
                 success: false,
                 version: 1,
-                statusCode: "500_000_001",
+                statusCode: "500_000_003",
                 message: "Wrong OTP.",
                 messageObj: {},
             }

@@ -9,7 +9,7 @@ export const authorize = async (req, res, next) => {
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(403).json(response.APPLICATION_ERROR.MISSING_AUTH);
         }
-
+        const stripStart = "Bearer ".length;
         // Strip the leading "Bearer " part from the token string
         const userIdToken = authHeader.substring(stripStart);
         // Split the user ID and token part from the rest of the token string
