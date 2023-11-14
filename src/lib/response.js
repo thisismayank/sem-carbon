@@ -6,7 +6,21 @@ const response = {
             statusCode: "500_001",
             message: "Server error.",
             messageObj: {},
-        }
+        },
+        UNAUTHORIZED: {
+            success: false,
+            version: 1,
+            statusCode: "500_002",
+            message: "User is unauthorized.",
+            messageObj: {},
+        },
+        MISSING_AUTH: {
+            success: false,
+            version: 1,
+            statusCode: "500_001",
+            message: "Request has no authorization.",
+            messageObj: {},
+        },
     },
     AUTH: {
         GENERATE_OTP: {
