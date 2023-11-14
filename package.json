@@ -11,6 +11,7 @@
   "author": "Mayank, Kartik, Rohit, Shivani",
   "license": "ISC",
   "dependencies": {
+    "async-redis": "^2.0.0",
     "babel-cli": "^6.26.0",
     "babel-eslint": "^9.0.0",
     "babel-jest": "^23.6.0",
