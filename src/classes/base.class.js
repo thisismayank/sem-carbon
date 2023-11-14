@@ -7,8 +7,8 @@ const redisClient = asyncRedis.createClient(redisConfig.port, redisConfig.host);
 
 export default class BaseClass {
     constructor(name, connection, redis) {
-        // if (redisClient) {
-        // this.redis = redisClient;
-        // }
+        if (redisClient) {
+            this.redis = redisClient;
+        }
     }
 }
