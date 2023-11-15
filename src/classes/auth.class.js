@@ -9,6 +9,7 @@ import * as authUtils from "../lib/auth";
 import { generateToken } from "../lib/token";
 
 import response from "../lib/response.js";
+import UserModel from "../models/users.model.js";
 
 console.log('REDIS CONFIG', redisConfig.host);
 const redisClient = asyncRedis.createClient(redisConfig.port, redisConfig.host);
@@ -16,7 +17,10 @@ const redisClient = asyncRedis.createClient(redisConfig.port, redisConfig.host);
 export default class AuthClass extends BaseClass {
 
     constructor(connection, redis) {
-        super(null, null, redis);
+        super(UserModel.collection.name, connection, redis);
+        this.schema = UserModel.schema;
+        this.name = UserModel.collection.name;
+        this.model = UserModel;
     }
 
     async sendTokenForEmailVerification(email) {
@@ -24,10 +28,10 @@ export default class AuthClass extends BaseClass {
             logger.info(
                 `INFO: AuthClass-sendTokenForEmailVerification - Email: ${email}`
             );
-            let user = await redisClient.get(email);
+            let user = await this.model.findOne({ email });
 
+            console.log('user', user);
             const isExistingUser = user ? true : false;
-
 
             const data = await authUtils.generateEmailVerificationToken(email, isExistingUser)
             logger.debug(`RESULT: AuthClass-sendTokenForEmailVerification: ${JSON.stringify(data)}`)
@@ -50,7 +54,7 @@ export default class AuthClass extends BaseClass {
             logger.info(
                 `INFO: AuthClass-verifyEmailVerificationToken - Email: ${email}`
             );
-            let user = await redisClient.get(email);
+            let user = await this.model.findOne({ email }).lean();
 
             const isExistingUser = user ? true : false;
 
@@ -71,14 +75,14 @@ export default class AuthClass extends BaseClass {
                 }
             }
 
+            console.log("YSERRERR", user);
             if (isExistingUser) {
-                user = JSON.parse(user);
-                const { userId } = user;
+                const userId = user._id.toString();
                 const token = await generateToken(userId);
 
                 return {
                     ...response.AUTH.VERIFY_OTP.LOG_IN,
-                    results: { ...user, token }
+                    results: { ...user, token, isLogin: true }
                 }
             }
 
@@ -102,10 +106,9 @@ export default class AuthClass extends BaseClass {
             logger.info(
                 `INFO: AuthClass-createNewAccountForUser - Email: ${email}`
             );
-            const isExistingUser = await redisClient.get(email);
+            const isExistingUser = await this.model.findOne({ email });
 
             const isLogin = isExistingUser ? true : false;
-
 
             const { canUserCreateNewAccount } = await authUtils.canUserCreateANewAccount(email, deviceToken);
             logger.debug(`RESULT: AuthClass-createNewAccountForUser: CanUserCreateNewAccount: ${canUserCreateNewAccount}`)
@@ -119,24 +122,27 @@ export default class AuthClass extends BaseClass {
                 }
             }
 
-            const userId = `${email}_${new Date().getTime()}`
-
-            const token = await generateToken(userId);
-
-
             const userData = {
                 firstName,
                 lastName,
                 email,
-                userId
             }
 
-            await redisClient.set(email, JSON.stringify(userData));
+            const userDataInDB = await this.model.create(userData);
+            logger.debug(`RESULT: AuthClass-createNewAccountForUser: UserDataInDB: ${JSON.stringify(userDataInDB)}`)
+            console.log('userDataInDB._id', userDataInDB._id)
+            console.log('userDataInDB._id', userDataInDB._id.toString())
+
+            const token = await generateToken(userDataInDB._id.toString());
+
+            userData._id = userDataInDB._id.toString()
+            userData.token = token;
 
             return {
                 ...response.AUTH.CREATE_NEW_USER.SUCCESS,
-                results: { ...userData, token }
+                results: userData
             }
+
         } catch (error) {
             logger.error(`ERROR: AuthClass-createNewAccountForUser - ${error}`);
             throw error;
