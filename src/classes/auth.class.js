@@ -1,8 +1,8 @@
 import asyncRedis from "async-redis";
-
+import moment from "moment";
 import { redisConfig } from "../config";
 import BaseClass from "./base.class.js";
-
+import { sendEmail } from "../lib/email.js";
 import logger from "../lib/logger";
 
 import * as authUtils from "../lib/auth";
@@ -36,7 +36,8 @@ export default class AuthClass extends BaseClass {
             const data = await authUtils.generateEmailVerificationToken(email, isExistingUser)
             logger.debug(`RESULT: AuthClass-sendTokenForEmailVerification: ${JSON.stringify(data)}`)
 
-            const { isLogin, resendEmailTokenCount, wrongEmailTokenCount, deviceToken, expiryTime } = data;
+            const { isLogin, resendEmailTokenCount, wrongEmailTokenCount, deviceToken, expiryTime, token } = data;
+            await sendEmail(email, "OTP", `This is your OTP ${token}. It will expire at ${moment(expiryTime).format("YYYY-MM-DD HH:mm:ss")}`)
 
             return {
                 ...response.AUTH.GENERATE_OTP.SEND_GENERATED_OTP.SUCCESS,
@@ -75,7 +76,7 @@ export default class AuthClass extends BaseClass {
                 }
             }
 
-            console.log("YSERRERR", user);
+
             if (isExistingUser) {
                 const userId = user._id.toString();
                 const token = await generateToken(userId);
