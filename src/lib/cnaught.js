@@ -26,6 +26,8 @@ export const placeOrder = async (amountInKg) => {
                 type: response.data.type,
                 id: response.data.id,
                 amountInKg: response.data.amount_kg,
+                priceInCentsUSD: response.data.price_usd_cents,
+                orderNumber: response.data.order_number,
                 state: response.data.state,
                 certificateUrl: response.data.certificate_public_url,
                 downloadCertificateUrl: response.data.certificate_download_public_url
