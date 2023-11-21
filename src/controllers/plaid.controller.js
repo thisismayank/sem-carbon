@@ -26,7 +26,7 @@ const configuration = new Configuration({
         },
     },
 });
-console.log('configuration', configuration)
+
 const plaidClient = new PlaidApi(configuration);
 export const getInfo = async (req, res) => {
     try {
@@ -82,8 +82,8 @@ export const exchangePublicToken = async (req, res) => {
             const [userId, token] = userIdToken.split(",");
         }
 
-        const publicToken = req.body.publicToken;
-
+        const publicToken = req.get("publicToken");
+        console.log('public token', publicToken)
         const plaidObj = new PlaidClass();
         const responseObj = await plaidObj.exchangePublicToken("mayank", publicToken)
 
@@ -110,11 +110,106 @@ export const getAccountData = async (req, res) => {
         }
 
 
-        const accessToken = req.body.accessToken;
+        const accessToken = req.get("accessToken");
 
         const plaidObj = new PlaidClass();
 
         const responseObj = await plaidObj.getAccountData("mayank", accessToken);
+
+        console.log('RESPONSE PBJ ACCOUNT DATA', responseObj)
+        res.send(responseObj);
+    } catch (error) {
+        console.log("error", error.toString())
+        res.status(500).send({
+            ...response.APPLICATION_ERROR.SERVER_ERROR,
+            messageObj: { error: error.toString() },
+        });
+    }
+}
+
+export const getTransactionData = async (req, res) => {
+    try {
+
+        const authHeader = req.get("Authorization");
+        console.log('GET AUTH hararar', req.body)
+
+        const stripStart = "Bearer ".length;
+        // Strip the leading "Bearer " part from the token string
+        if (stripStart && stripStart.length > 0) {
+            const userIdToken = authHeader.substring(stripStart);
+            // Split the user ID and token part from the rest of the token string
+            const [userId, token] = userIdToken.split(",");
+        }
+
+        const accessToken = req.get("accessToken");
+
+        const plaidObj = new PlaidClass();
+
+        const responseObj = await plaidObj.getTransactionData("mayank", accessToken);
+
+        console.log('RESPONSE PBJ ACCOUNT DATA', responseObj)
+        res.send(responseObj);
+    } catch (error) {
+        console.log("error", error.toString())
+        res.status(500).send({
+            ...response.APPLICATION_ERROR.SERVER_ERROR,
+            messageObj: { error: error.toString() },
+        });
+    }
+}
+
+export const getRecurringTransactions = async (req, res) => {
+    try {
+
+        const authHeader = req.get("Authorization");
+        console.log('GET AUTH hararar', req.body)
+
+        const stripStart = "Bearer ".length;
+        // Strip the leading "Bearer " part from the token string
+        if (stripStart && stripStart.length > 0) {
+            const userIdToken = authHeader.substring(stripStart);
+            // Split the user ID and token part from the rest of the token string
+            const [userId, token] = userIdToken.split(",");
+        }
+
+
+        const accessToken = req.get("accessToken");
+
+        const plaidObj = new PlaidClass();
+
+        const responseObj = await plaidObj.getRecurringTransactions("mayank", accessToken);
+
+        console.log('RESPONSE PBJ ACCOUNT DATA', responseObj)
+        res.send(responseObj);
+    } catch (error) {
+        console.log("error", error.toString())
+        res.status(500).send({
+            ...response.APPLICATION_ERROR.SERVER_ERROR,
+            messageObj: { error: error.toString() },
+        });
+    }
+}
+
+export const getIdentityInformation = async (req, res) => {
+    try {
+
+        const authHeader = req.get("Authorization");
+        console.log('GET AUTH hararar', req.body)
+
+        const stripStart = "Bearer ".length;
+        // Strip the leading "Bearer " part from the token string
+        if (stripStart && stripStart.length > 0) {
+            const userIdToken = authHeader.substring(stripStart);
+            // Split the user ID and token part from the rest of the token string
+            const [userId, token] = userIdToken.split(",");
+        }
+
+
+        const accessToken = req.get("accessToken")
+
+        const plaidObj = new PlaidClass();
+
+        const responseObj = await plaidObj.getIdentityInformation("mayank", accessToken);
 
         console.log('RESPONSE PBJ ACCOUNT DATA', responseObj)
         res.send(responseObj);
