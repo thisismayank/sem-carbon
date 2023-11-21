@@ -4,9 +4,13 @@ const router = express.Router();
 
 router.route("/api/info").post(controller.getInfo);
 
-router.route("/create_link_token").post(controller.createLinkToken);
-router.route("/exchange/public/token").post(controller.exchangePublicToken);
-router.route("/account").post(controller.getAccountData);
+router.route("/link/token").get(controller.createLinkToken);
+router.route("/public/token").get(controller.exchangePublicToken);
+router.route("/account").get(controller.getAccountData);
+router.route("/transactions").get(controller.getTransactionData);
+router.route("/transactions/recurring").get(controller.getRecurringTransactions);
+router.route("/identity").get(controller.getIdentityInformation);
+
 
 
 // router.route("/").post(controller.createNewAccountForUser);
