@@ -86,3 +86,68 @@ export const getAccountData = async (access_token) => {
         throw error;
     }
 }
+
+export const getTransactionData = async (access_token) => {
+    try {
+        logger.info(`INFO: Plaid-getTransactionData: ${access_token}`);
+
+        const body = { access_token }
+        const transactionDataResponse = await plaidClient.transactionsSync(body);
+        const transactions = transactionDataResponse.data.transactions;
+        logger.debug(`RESULT: Plaid-getTransactionData: STATUS: ${transactionDataResponse.status} - DATA: ${JSON.stringify(transactionDataResponse.data)}`);
+        if (transactionDataResponse.status == 200) {
+            return { success: true, transactionResponseData: transactionDataResponse.data };
+        }
+
+    } catch (error) {
+        logger.error(`ERROR: Plaid-getTransactionData: ${error}`);
+        throw error;
+    }
+}
+
+export const getRecurringTransactions = async (access_token, accountIds) => {
+    try {
+        logger.info(`INFO: Plaid-getRecurringTransactions: Access Token: ${access_token} - Account IDs: ${accountIds}`);
+
+        const body = {
+            "client_id": PLAID_CLIENT_ID,
+            "secret": PLAID_SECRET,
+            access_token,
+            account_ids: accountIds
+        }
+        const transactionDataResponse = await plaidClient.transactionsRecurringGet(body);
+        console.log('TransactionData', transactionDataResponse);
+        // const transactions = transactionDataResponse.data.transactions;
+        logger.debug(`RESULT: Plaid-getRecurringTransactions: STATUS: ${transactionDataResponse.status} - DATA: ${JSON.stringify(transactionDataResponse.data)}`);
+        if (transactionDataResponse.status == 200) {
+            return { success: true, transactionResponseData: transactionDataResponse.data };
+        }
+
+    } catch (error) {
+        logger.error(`ERROR: Plaid-getRecurringTransactions: ${error}`);
+        throw error;
+    }
+}
+
+export const getIdentityInformation = async (access_token) => {
+    try {
+        logger.info(`INFO: Plaid-getIdentityInformation: Access Token: ${access_token}`);
+
+        const body = {
+            "client_id": PLAID_CLIENT_ID,
+            "secret": PLAID_SECRET,
+            access_token,
+        }
+        const userIdentificationResponse = await plaidClient.identityGet(body);
+        console.log('userIdentificationResponse', userIdentificationResponse)
+        // const userIdentificationData = userIdentificationResponse.data.transactions;
+        logger.debug(`RESULT: Plaid-getIdentityInformation: STATUS: ${userIdentificationResponse.status} - DATA: ${JSON.stringify(userIdentificationResponse.data)}`);
+        if (userIdentificationResponse.status == 200) {
+            return { success: true, userIdentificationResponseData: userIdentificationResponse.data };
+        }
+
+    } catch (error) {
+        logger.error(`ERROR: Plaid-getIdentityInformation: ${error}`);
+        throw error;
+    }
+}
