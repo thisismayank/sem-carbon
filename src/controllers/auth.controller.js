@@ -1,5 +1,7 @@
 import response from "../lib/response.js";
 import AuthClass from "../classes/auth.class.js";
+import OpenAI from "../classes/openai.class.js";
+import OpenAIClass from "../classes/openai.class.js";
 
 export const sendTokenForEmailVerification = async (req, res) => {
     try {
@@ -45,4 +47,6 @@ export const createNewAccountForUser = async (req, res) => {
         });
     }
 }
+
+
 

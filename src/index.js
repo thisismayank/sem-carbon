@@ -5,8 +5,8 @@ import { connectMongoose } from "./lib/mongoose.js";
 
 const appServer = http.createServer(app);
 
-appServer.listen(3000, async () => {
-    logger.info("INFO: Listening on port 3000");
+appServer.listen(8000, async () => {
+    logger.info("INFO: Listening on port 8000");
     await connectMongoose();
 
 })

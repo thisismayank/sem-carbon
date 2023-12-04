@@ -9,5 +9,8 @@ router.route("/email/verify").post(controller.verifyEmailVerificationToken);
 router.route("/").post(controller.createNewAccountForUser);
 
 
+
+
+
 export default router;
 

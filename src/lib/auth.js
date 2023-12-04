@@ -15,9 +15,9 @@ export const generateEmailVerificationToken = async (
     isWhiteListed = false
 ) => {
 
-    if (email.includes("mayank")) {
-        isWhiteListed = true
-    }
+    // if (email.includes("mayank")) {
+    //     isWhiteListed = true
+    // }
 
     const expiryTime = moment()
         .add(5, "minutes");

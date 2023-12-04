@@ -1,5 +1,7 @@
 import asyncRedis from "async-redis";
 
+import _ from "underscore";
+
 import { redisConfig } from "../config";
 import BaseClass from "./base.class.js";
 
@@ -8,15 +10,16 @@ import response from "../lib/response.js";
 import * as Plaid from "../lib/plaid.js"
 import * as CNaught from "../lib/cnaught";
 import CarbonModel from "../models/carbon.model.js";
+import BankAccountModel from "../models/bankaccount.model.js";
 const redisClient = asyncRedis.createClient(redisConfig.port, redisConfig.host);
 
 export default class PlaidClass extends BaseClass {
 
     constructor(connection, redis) {
-        super(CarbonModel.collection.name, connection, redis);
-        this.schema = CarbonModel.schema;
-        this.name = CarbonModel.collection.name;
-        this.model = CarbonModel;
+        super(BankAccountModel.collection.name, connection, redis);
+        this.schema = BankAccountModel.schema;
+        this.name = BankAccountModel.collection.name;
+        this.model = BankAccountModel;
     }
 
     async createLinkToken(userId) {
@@ -81,8 +84,21 @@ export default class PlaidClass extends BaseClass {
             logger.info(
                 `INFO: PlaidClass-getAccountData - User ID: ${userId} - Access Token: ${accessToken}`
             );
+
             const accountResponseData = await Plaid.getAccountData(accessToken);
             console.log('accountResponseData', accountResponseData)
+
+            const databaseEntryData = {
+                accountId: accountResponseData.accountResponseData.accounts[0].account_id,
+                currentBalance: accountResponseData.accountResponseData.accounts[0].balances.current,
+                availableBalance: accountResponseData.accountResponseData.accounts[0].balances.available,
+
+                accountNumber: accountResponseData.accountResponseData.numbers.ach[0].account,
+                routingNumber: accountResponseData.accountResponseData.numbers.ach[0].routing,
+                wireRoutingNumber: accountResponseData.accountResponseData.numbers.ach[0].wire_routing,
+            }
+
+            await this.model.create()
             if (!accountResponseData.success) {
                 return {
                     ...response.CARBON.CNAUGHT.PLACE_ORDER.FAILURE,
@@ -121,6 +137,58 @@ export default class PlaidClass extends BaseClass {
                     }
                 }
             }
+            let co2mapping = {
+                m: {
+                    price: 6.5,
+                    carbon: 3.5
+                },
+                air: {
+                    carbon: 7
+                },
+                fun: {
+                    carbon: 1,
+                    price: 40
+                },
+                uber: {
+                    price: 1.5,
+                    carbon: 0.3
+                },
+                starbucks: {
+                    price: 3,
+                    carbon: 3.6
+                }
+            }
+
+            let totalCarbonEmissions = 0;
+            for (let transaction of transactionData.transactionResponseData.added) {
+                let totalCarbon = 0;
+                const randomAddition = Math.random(0, 10) * 10
+                if (randomAddition > 5) {
+                    transaction.amount = transaction.amount + randomAddition
+                } else {
+                    transaction.amount = transaction.amount - randomAddition
+
+                }
+
+                if (transaction.amount.toString().charAt(0) !== "-") {
+                    if (transaction.name.toLowerCase().includes("mcdonald")) {
+                        totalCarbon = co2mapping.m.carbon * (transaction.amount / co2mapping.m.price)
+                    } else if (transaction.name.toLowerCase().includes("airline")) {
+                        totalCarbon = co2mapping.air.carbon * (transaction.amount)
+                    } else if (transaction.name.toLowerCase().includes("uber")) {
+                        totalCarbon = co2mapping.uber.carbon * (transaction.amount / co2mapping.uber.price)
+                    } else if (transaction.name.toLowerCase().includes("star")) {
+                        totalCarbon = co2mapping.starbucks.carbon * (transaction.amount / co2mapping.starbucks.price)
+                    } else {
+                        totalCarbon = co2mapping.fun.carbon * (transaction.amount / co2mapping.fun.price)
+                    }
+                }
+                transaction['carbon'] = totalCarbon;
+
+                totalCarbonEmissions = totalCarbon + totalCarbonEmissions
+            }
+
+
 
             return {
                 ...response.CARBON.CNAUGHT.PLACE_ORDER.SUCCESS,
@@ -128,6 +196,7 @@ export default class PlaidClass extends BaseClass {
                     added: transactionData.transactionResponseData.added,
                     has_more: transactionData.transactionResponseData.has_more,
                     next_cursor: transactionData.transactionResponseData.next_cursor,
+                    totalCarbonEmissions: totalCarbonEmissions.toFixed(2)
 
                 }
             }

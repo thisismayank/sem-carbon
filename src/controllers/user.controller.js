@@ -13,3 +13,4 @@ export const sendEmailVerificationToken = async (req, res) => {
         });
     }
 }
+
