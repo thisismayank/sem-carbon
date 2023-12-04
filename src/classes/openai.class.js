@@ -7,7 +7,7 @@ import logger from "../lib/logger";
 
 
 // Replace 'YOUR_OPENAI_API_KEY' with your actual OpenAI API key
-
+const apiKey = 'sk-1qVAfXRpsEzPmpeMT8vuT3BlbkFJ5Ez4TO9wLece914AP8';
 
 export default class OpenAIClass extends BaseClass {
     async generateResponse(prompt) {
