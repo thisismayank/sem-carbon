@@ -39,3 +39,23 @@ app.post('/v1/email', (req, res) => {
 });
 
 
+app.post('/v1/email/verify', (req, res) => {
+    const { otp, isLogin, type } = req.body;
+    let responseObj = {}
+    if (otp !== '112233') {
+
+
+        res.status(400).send({ success: false, message: 'Invalid OTP, please try again', otp });
+    }
+    if (isLogin) {
+        if (type === userType[0]) {
+            responseObj = { success: true, message: 'OTP verified successfully', type: type, name: "MANAGER", display: 0, login: true, secretToken: secretToken[0] };
+        } else {
+            responseObj = { success: true, message: 'OTP verified successfully', type: type, name: "CUSTOMER", display: 1, login: true, secretToken: secretToken[1] };
+        }
+    } else {
+        responseObj = { success: true, message: 'OTP verified successfully', login: false };
+    }
+    res.status(200).send(responseObj);
+});
+
