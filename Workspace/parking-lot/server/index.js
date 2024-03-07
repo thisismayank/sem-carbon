@@ -20,6 +20,55 @@ app.listen(port, () => {
 
 let userType = ["manager", "customer"]
 let secretToken = ["secretTokenForManager", "secretTokenForCustomer"]
+let slots = [
+    "6:00 AM - 7:00 AM",
+    "7:00 AM - 8:00 AM",
+    "8:00 AM - 9:00 AM",
+    "9:00 AM - 10:00 AM",
+    "10:00 AM - 11:00 AM",
+    "11:00 AM - 12:00 PM",
+    "12:00 PM - 1:00 PM",
+    "1:00 AM - 2:00 PM",
+    "2:00 AM - 3:00 PM",
+    "3:00 PM - 4:00 PM",
+    "4:00 PM - 5:00 PM",
+    "5:00 PM - 6:00 PM",
+    "6:00 PM - 7:00 PM",
+    "7:00 PM - 8:00 PM",
+    "8:00 PM - 9:00 PM",
+    "9:00 PM - 10:00 PM",
+    "10:00 PM - 11:00 PM"
+]
+let bookedSlotsBeforeThreePM = [
+    "3:00 AM - 4:00 PM",
+    "6:00 PM - 7:00 PM",
+    "7:00 PM - 8:00 PM",
+    "10:00 PM - 11:00 PM"
+]
+
+let bookedSlotsAfterThreePM = [
+    "6:00 AM - 7:00 AM",
+    "7:00 AM - 8:00 AM",
+    "8:00 AM - 9:00 AM",
+    "12:00 PM - 1:00 PM",
+    "1:00 AM - 2:00 PM",
+    "2:00 AM - 3:00 PM",
+]
+let bookedSlotsTwoDaysLater = [
+    "6:00 AM - 7:00 AM",
+    "7:00 AM - 8:00 AM",
+    "8:00 AM - 9:00 AM",
+    "9:00 AM - 10:00 AM",
+    "3:00 PM - 4:00 PM",
+    "4:00 PM - 5:00 PM",
+    "6:00 PM - 7:00 PM",
+    "7:00 PM - 8:00 PM"
+]
+
+let threePM = null
+let firstHalfOfDay = null
+let secondHalfOfDay = null
+let twoDaysLaterCheck = null
 app.post('/v1/email', (req, res) => {
     console.log('req', req.body)
     const { email } = req.body;
@@ -63,55 +112,11 @@ app.post('/v1/email/verify', (req, res) => {
 app.get('/v1/slots', (req, res) => {
     const { date, location } = req.query;
     console.log('date', date, 'location', location);
-    const threePM = moment().set({ hour: 15, minute: 0, second: 0, millisecond: 0 });
-    const firstHalfOfDay = moment(date).isBefore(threePM)
-    const secondHalfOfDay = moment(date).isAfter(threePM)
-    const twoDaysLaterCheck = moment(date).isBefore(moment().add(2, 'days'));
-    let slots = [
-        "6:00 AM - 7:00 AM",
-        "7:00 AM - 8:00 AM",
-        "8:00 AM - 9:00 AM",
-        "9:00 AM - 10:00 AM",
-        "10:00 AM - 11:00 AM",
-        "11:00 AM - 12:00 PM",
-        "12:00 PM - 1:00 PM",
-        "1:00 AM - 2:00 PM",
-        "2:00 AM - 3:00 PM",
-        "3:00 PM - 4:00 PM",
-        "4:00 PM - 5:00 PM",
-        "5:00 PM - 6:00 PM",
-        "6:00 PM - 7:00 PM",
-        "7:00 PM - 8:00 PM",
-        "8:00 PM - 9:00 PM",
-        "9:00 PM - 10:00 PM",
-        "10:00 PM - 11:00 PM"
-    ]
-    let bookedSlotsBeforeThreePM = [
-        "3:00 AM - 4:00 PM",
-        "6:00 PM - 7:00 PM",
-        "7:00 PM - 8:00 PM",
-        "10:00 PM - 11:00 PM"
-    ]
+    threePM = moment().set({ hour: 15, minute: 0, second: 0, millisecond: 0 });
+    firstHalfOfDay = moment(date).isBefore(threePM)
+    secondHalfOfDay = moment(date).isAfter(threePM)
+    twoDaysLaterCheck = moment(date).isBefore(moment().add(2, 'days'));
 
-    let bookedSlotsAfterThreePM = [
-        "6:00 AM - 7:00 AM",
-        "7:00 AM - 8:00 AM",
-        "8:00 AM - 9:00 AM",
-        "12:00 PM - 1:00 PM",
-        "1:00 AM - 2:00 PM",
-        "2:00 AM - 3:00 PM",
-    ]
-    let bookedSlotsTwoDaysLater = [
-        "6:00 AM - 7:00 AM",
-        "7:00 AM - 8:00 AM",
-        "8:00 AM - 9:00 AM",
-        "9:00 AM - 10:00 AM",
-        "3:00 PM - 4:00 PM",
-        "4:00 PM - 5:00 PM",
-        "6:00 PM - 7:00 PM",
-        "7:00 PM - 8:00 PM",
-
-    ]
     let finalSlots = [];
     if (firstHalfOfDay) {
         finalSlots = [...bookedSlotsBeforeThreePM]
@@ -119,13 +124,23 @@ app.get('/v1/slots', (req, res) => {
         finalSlots = [...bookedSlotsAfterThreePM]
     } else if (twoDaysLaterCheck) {
         finalSlots = [...bookedSlotsTwoDaysLater]
-    } else {
-        let gap = Math.floor(Math.round() * 18);
-        for (let i = 0; i < slots.length; i = i + gap) {
-            finalSlots.push(slots[i]);
-        }
     }
 
     res.status(200).send(finalSlots);
 });
 
+app.post('/v1/slots', (req, res) => {
+    const { date, location, slot } = req.body;
+
+    if (firstHalfOfDay) {
+        finalSlots = bookedSlotsBeforeThreePM.filter(slotH => slot == slotH)
+    } else if (secondHalfOfDay) {
+        finalSlots = bookedSlotsAfterThreePM.filter(slotH => slot == slotH)
+    } else if (twoDaysLaterCheck) {
+        finalSlots = bookedSlotsTwoDaysLater.filter(slotH => slot == slotH)
+    }
+
+    res.status(200).send({ success: true, message: "Booking made successfully", slot, date, location, bookingDone: true });
+
+
+});
