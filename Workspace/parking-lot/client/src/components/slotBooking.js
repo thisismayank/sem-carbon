@@ -39,7 +39,16 @@ function SlotBooking() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log('Selected Slot:', selectedSlot);
-        // Here, submit the selected slot along with date and location to your backend
+        const response = await axios.post(`http://localhost:8000/v1/slots`, { date: bookingDetails.date, location: bookingDetails.location, slot: selectedSlot });
+        const data = await response.data;
+        console.log('data', data);
+        if (data.success) {
+            sessionStorage.setItem('bookingSlot', data.slot)
+            sessionStorage.setItem('bookingDate', data.date)
+            sessionStorage.setItem('bookingLocation', data.location)
+            sessionStorage.setItem('bookingDone', data.bookingDone)
+
+        }
     };
 
     return (
