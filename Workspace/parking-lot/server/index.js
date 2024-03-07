@@ -17,3 +17,25 @@ app.listen(port, () => {
 });
 
 
+let userType = ["manager", "customer"]
+let secretToken = ["secretTokenForManager", "secretTokenForCustomer"]
+app.post('/v1/email', (req, res) => {
+    console.log('req', req.body)
+    const { email } = req.body;
+    console.log('Received email:', email);
+    let responseObj = { success: '', message: '', email, otp: '' }
+    if (email.includes("mayank")) {
+        responseObj = {
+            success: true, message: 'Email received successfully', email, otp: "******", isLogin: true, type: userType[0]
+        }
+    } else if (email.includes("testuser")) {
+        responseObj = { success: true, message: 'Email received successfully', email, otp: "******", isLogin: true, type: userType[1] };
+    } else {
+        responseObj = {
+            success: true, message: 'Email received successfully', email, otp: "******", isLogin: false, type: userType[1]
+        };
+    }
+    res.status(200).send(responseObj)
+});
+
+
