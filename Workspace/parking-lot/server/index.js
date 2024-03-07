@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const moment = require('moment');
 
 const app = express();
 const port = 8000;
@@ -57,5 +58,74 @@ app.post('/v1/email/verify', (req, res) => {
         responseObj = { success: true, message: 'OTP verified successfully', login: false };
     }
     res.status(200).send(responseObj);
+});
+
+app.get('/v1/slots', (req, res) => {
+    const { date, location } = req.query;
+    console.log('date', date, 'location', location);
+    const threePM = moment().set({ hour: 15, minute: 0, second: 0, millisecond: 0 });
+    const firstHalfOfDay = moment(date).isBefore(threePM)
+    const secondHalfOfDay = moment(date).isAfter(threePM)
+    const twoDaysLaterCheck = moment(date).isBefore(moment().add(2, 'days'));
+    let slots = [
+        "6:00 AM - 7:00 AM",
+        "7:00 AM - 8:00 AM",
+        "8:00 AM - 9:00 AM",
+        "9:00 AM - 10:00 AM",
+        "10:00 AM - 11:00 AM",
+        "11:00 AM - 12:00 PM",
+        "12:00 PM - 1:00 PM",
+        "1:00 AM - 2:00 PM",
+        "2:00 AM - 3:00 PM",
+        "3:00 PM - 4:00 PM",
+        "4:00 PM - 5:00 PM",
+        "5:00 PM - 6:00 PM",
+        "6:00 PM - 7:00 PM",
+        "7:00 PM - 8:00 PM",
+        "8:00 PM - 9:00 PM",
+        "9:00 PM - 10:00 PM",
+        "10:00 PM - 11:00 PM"
+    ]
+    let bookedSlotsBeforeThreePM = [
+        "3:00 AM - 4:00 PM",
+        "6:00 PM - 7:00 PM",
+        "7:00 PM - 8:00 PM",
+        "10:00 PM - 11:00 PM"
+    ]
+
+    let bookedSlotsAfterThreePM = [
+        "6:00 AM - 7:00 AM",
+        "7:00 AM - 8:00 AM",
+        "8:00 AM - 9:00 AM",
+        "12:00 PM - 1:00 PM",
+        "1:00 AM - 2:00 PM",
+        "2:00 AM - 3:00 PM",
+    ]
+    let bookedSlotsTwoDaysLater = [
+        "6:00 AM - 7:00 AM",
+        "7:00 AM - 8:00 AM",
+        "8:00 AM - 9:00 AM",
+        "9:00 AM - 10:00 AM",
+        "3:00 PM - 4:00 PM",
+        "4:00 PM - 5:00 PM",
+        "6:00 PM - 7:00 PM",
+        "7:00 PM - 8:00 PM",
+
+    ]
+    let finalSlots = [];
+    if (firstHalfOfDay) {
+        finalSlots = [...bookedSlotsBeforeThreePM]
+    } else if (secondHalfOfDay) {
+        finalSlots = [...bookedSlotsAfterThreePM]
+    } else if (twoDaysLaterCheck) {
+        finalSlots = [...bookedSlotsTwoDaysLater]
+    } else {
+        let gap = Math.floor(Math.round() * 18);
+        for (let i = 0; i < slots.length; i = i + gap) {
+            finalSlots.push(slots[i]);
+        }
+    }
+
+    res.status(200).send(finalSlots);
 });
 
