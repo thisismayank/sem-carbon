@@ -13,6 +13,14 @@ app.use(compression()); // compress to enhance functionality
 app.use(cookieParser()); // parse cookies automatically - req.cookies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const multer = require('multer');
+const upload = multer({ dest: './public/' }); // Configure multer to upload files to the 'uploads' directory
+
+app.post('/v1/image', upload.single('image'), (req, res) => { // 'image' is the name of the form field
+    console.log('req.file', req.file);
+    res.send('File upload received!');
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
@@ -158,7 +166,26 @@ app.get('/v1/slots/available', (req, res) => {
     let availableSlots = _.difference(slots, bookedSlots);
 
 
-    res.status(200).send({ success: true, message: "Bookings fetched successfully", availableSlots, date });
+    res.status(200).send({ success: true, message: "Bookings fetched successfully", availableSlots, bookedSlots, date });
+
+
+});
+
+app.post('/v1/image', upload.single('image'), (req, res) => {
+    console.log('req.file', req.file);
+    console.log('req.query', req.file.path, 'name', req.file.filename, 'orig', req.file.originalname);
+    // const { date, location, slot } = req.body;
+    // let bookedSlots = []
+    // if (moment(date).isBefore(moment().add(2, 'days'))) {
+    //     bookedSlots = [...bookedSlotsTwoDaysLater];
+    // } else {
+    //     bookedSlots = [...bookedSlotsBeforeThreePM, ...bookedSlotsAfterThreePM]
+    // }
+
+    // let availableSlots = _.difference(slots, bookedSlots);
+
+
+    // res.status(200).send({ success: true, message: "Bookings fetched successfully", availableSlots, bookedSlots, date });
 
 
 });
