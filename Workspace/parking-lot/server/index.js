@@ -16,10 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 const multer = require('multer');
 const upload = multer({ dest: './public/' }); // Configure multer to upload files to the 'uploads' directory
 
-app.post('/v1/image', upload.single('image'), (req, res) => { // 'image' is the name of the form field
-    console.log('req.file', req.file);
-    res.send('File upload received!');
-});
+
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
@@ -29,9 +26,6 @@ app.listen(port, () => {
 let userType = ["manager", "customer"]
 let secretToken = ["secretTokenForManager", "secretTokenForCustomer"]
 let slots = [
-    "6:00 AM - 7:00 AM",
-    "7:00 AM - 8:00 AM",
-    "8:00 AM - 9:00 AM",
     "9:00 AM - 10:00 AM",
     "10:00 AM - 11:00 AM",
     "11:00 AM - 12:00 PM",
@@ -40,39 +34,77 @@ let slots = [
     "2:00 AM - 3:00 PM",
     "3:00 PM - 4:00 PM",
     "4:00 PM - 5:00 PM",
-    "5:00 PM - 6:00 PM",
-    "6:00 PM - 7:00 PM",
-    "7:00 PM - 8:00 PM",
-    "8:00 PM - 9:00 PM",
-    "9:00 PM - 10:00 PM",
-    "10:00 PM - 11:00 PM"
 ]
-let bookedSlotsBeforeThreePM = [
-    "3:00 AM - 4:00 PM",
+let bookedSlotsAfterThreePM = [
+    "3:00 PM - 4:00 PM",
     "6:00 PM - 7:00 PM",
     "7:00 PM - 8:00 PM",
     "10:00 PM - 11:00 PM"
 ]
 
-let bookedSlotsAfterThreePM = [
-    "6:00 AM - 7:00 AM",
-    "7:00 AM - 8:00 AM",
-    "8:00 AM - 9:00 AM",
+let bookedSlotsBeforeThreePM = [
     "12:00 PM - 1:00 PM",
-    "1:00 AM - 2:00 PM",
-    "2:00 AM - 3:00 PM",
+    "1:00 PM - 2:00 PM",
+    "2:00 PM - 3:00 PM",
 ]
 let bookedSlotsTwoDaysLater = [
-    "6:00 AM - 7:00 AM",
-    "7:00 AM - 8:00 AM",
-    "8:00 AM - 9:00 AM",
     "9:00 AM - 10:00 AM",
     "3:00 PM - 4:00 PM",
     "4:00 PM - 5:00 PM",
-    "6:00 PM - 7:00 PM",
-    "7:00 PM - 8:00 PM"
 ]
-
+let timeToSlotsMapping = {
+    "9:00 AM - 10:00 AM": 2,
+    "10:00 AM - 11:00 AM": 10,
+    "11:00 AM - 12:00 PM": 10,
+    "12:00 PM - 1:00 PM": 10,
+    "1:00 AM - 2:00 PM": 10,
+    "2:00 AM - 3:00 PM": 10,
+    "3:00 PM - 4:00 PM": 10,
+    "4:00 PM - 5:00 PM": 10,
+}
+let bookings = [{
+    carNumber: "ABCD",
+    id: 1,
+    userName: "user1",
+    email: "one@g.co",
+    phone: "989xxxxxxxx",
+    slot: "12:00 PM - 1:00 PM"
+}, {
+    carNumber: "EFGH",
+    id: 2,
+    userName: "user2",
+    email: "two@g.co",
+    phone: "988xxxxxxxx",
+    slot: "9:00 AM - 10:00 AM"
+}, {
+    carNumber: "MNO",
+    id: 4,
+    userName: "user4",
+    email: "four@g.co",
+    phone: "986xxxxxxxx",
+    slot: "9:00 AM - 10:00 AM"
+}, {
+    carNumber: "PQR",
+    id: 5,
+    userName: "user5",
+    email: "five@g.co",
+    phone: "985xxxxxxxx",
+    slot: "9:00 AM - 10:00 AM"
+}, {
+    carNumber: "M4K4L1",
+    id: 6,
+    userName: "user6",
+    email: "six@g.co",
+    phone: "985xxxxxxxx",
+    slot: "9:00 AM - 10:00 AM"
+}, {
+    carNumber: "PQR",
+    id: 5,
+    userName: "user5",
+    email: "five@g.co",
+    phone: "985xxxxxxxx",
+    slot: "9:00 AM - 10:00 AM"
+}]
 let threePM = null
 let firstHalfOfDay = null
 let secondHalfOfDay = null
@@ -107,9 +139,9 @@ app.post('/v1/email/verify', (req, res) => {
     }
     if (isLogin) {
         if (type === userType[0]) {
-            responseObj = { success: true, message: 'OTP verified successfully', type: type, name: "MANAGER", display: 0, login: true, secretToken: secretToken[0] };
+            responseObj = { success: true, message: 'OTP verified successfully', type: type, name: "MANAGER", display: 0, login: true, secretToken: secretToken[0], userId: 0 };
         } else {
-            responseObj = { success: true, message: 'OTP verified successfully', type: type, name: "CUSTOMER", display: 1, login: true, secretToken: secretToken[1] };
+            responseObj = { success: true, message: 'OTP verified successfully', type: type, name: "CUSTOMER", display: 1, login: true, secretToken: secretToken[1], userId: 1 };
         }
     } else {
         responseObj = { success: true, message: 'OTP verified successfully', login: false };
@@ -173,19 +205,22 @@ app.get('/v1/slots/available', (req, res) => {
 
 app.post('/v1/image', upload.single('image'), (req, res) => {
     console.log('req.file', req.file);
-    console.log('req.query', req.file.path, 'name', req.file.filename, 'orig', req.file.originalname);
-    // const { date, location, slot } = req.body;
-    // let bookedSlots = []
-    // if (moment(date).isBefore(moment().add(2, 'days'))) {
-    //     bookedSlots = [...bookedSlotsTwoDaysLater];
-    // } else {
-    //     bookedSlots = [...bookedSlotsBeforeThreePM, ...bookedSlotsAfterThreePM]
-    // }
-
-    // let availableSlots = _.difference(slots, bookedSlots);
+    const headers = req.get("Authorization");
+    const userId = headers.split(',')[0]
 
 
-    // res.status(200).send({ success: true, message: "Bookings fetched successfully", availableSlots, bookedSlots, date });
+    // +++++++++ read the file using Tesseract npm package
+    // const conversation = await tesseract.recognize(req.file.path, "eng");
+    // +++++++++ for demo we just say that the car number plate had this "M4KAL1"
+
+    // With user id find booking from the database
+    // Now, get the user information  
+    // send another booking to user
+    // use the cae number fetched from tesseract to find this user
+    // trigger a notification to this user that they have overstayed their welcome
+    // trigger a notification to the manager about the incident
+
+    res.status(200).send({ success: true, message: "Apologies booking re-made successfully", slot: "Same as before", location: "Same as before" });
 
 
 });
