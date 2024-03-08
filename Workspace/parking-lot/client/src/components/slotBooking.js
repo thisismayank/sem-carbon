@@ -7,6 +7,7 @@ function SlotBooking() {
     });
     const [availableSlots, setAvailableSlots] = useState([]);
     const [selectedSlot, setSelectedSlot] = useState('');
+    const [responseDataBooking, setResponseDataBooking] = useState(null);
 
     useEffect(() => {
         if (bookingDetails.date && bookingDetails.location) {
@@ -28,8 +29,13 @@ function SlotBooking() {
     };
 
     const fetchAvailableSlots = async () => {
+        const storedSecretToken = sessionStorage.getItem('secretToken');
 
-        const response = await axios.get(`http://localhost:8000/v1/slots?date=${bookingDetails.date}&location=${bookingDetails.location}`);
+        const response = await axios.get(`http://localhost:8000/v1/slots?date=${bookingDetails.date}&location=${bookingDetails.location}`, {
+            headers: {
+                'Authorization': `Bearer ${storedSecretToken}`,
+            },
+        });
         const data = await response.data;
         console.log('data', data);
 
@@ -38,8 +44,14 @@ function SlotBooking() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const storedSecretToken = sessionStorage.getItem('secretToken');
+
         console.log('Selected Slot:', selectedSlot);
-        const response = await axios.post(`http://localhost:8000/v1/slots`, { date: bookingDetails.date, location: bookingDetails.location, slot: selectedSlot });
+        const response = await axios.post(`http://localhost:8000/v1/slots`, { date: bookingDetails.date, location: bookingDetails.location, slot: selectedSlot }, {
+            headers: {
+                'Authorization': `Bearer ${storedSecretToken}`,
+            },
+        });
         const data = await response.data;
         console.log('data', data);
         if (data.success) {
@@ -47,7 +59,7 @@ function SlotBooking() {
             sessionStorage.setItem('bookingDate', data.date)
             sessionStorage.setItem('bookingLocation', data.location)
             sessionStorage.setItem('bookingDone', data.bookingDone)
-
+            setResponseDataBooking({ ...data })
         }
     };
 
@@ -94,6 +106,23 @@ function SlotBooking() {
             </div>
 
             <button type="submit" disabled={!selectedSlot}>Book Slot</button>
+
+            {responseDataBooking && <div style={{ height: 100, width: 600, margin: 32, padding: 32, alignContent: "center", alignItems: "center", backgroundColor: "greenyellow", fontWeight: "bold" }}>
+                <table>
+                    <tr>
+                        <td>Message: </td>
+                        <td style={{ padding: 8 }}>{responseDataBooking.message}</td>
+                    </tr>
+                    <tr>
+                        <td>Slot: </td>
+                        <td style={{ padding: 8 }}>{responseDataBooking.slot}</td>
+                    </tr>
+                    <tr>
+                        <td>Location: </td>
+                        <td style={{ padding: 8 }}>{responseDataBooking.location}</td>
+                    </tr>
+                </table>
+            </div>}
         </form>
     );
 }
