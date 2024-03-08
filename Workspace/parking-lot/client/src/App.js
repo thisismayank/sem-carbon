@@ -5,6 +5,7 @@ import OTPScreen from './components/otp';
 // import Dashboard from './components/Dashboard';
 import SlotBooking from './components/slotBooking';
 import ImageUploader from './components/imageUploader';
+import DashboardScreen from './components/dashboard';
 
 function App() {
   // const userType = 'customer'; // This should be dynamically determined
@@ -50,8 +51,14 @@ function App() {
 
   return (
     <div>
-      {!otp ? <EmailScreen onOtpSet={handleOtpUpdate} /> : secretToken ? <></> : <OTPScreen onSecretTokenSet={handleSecretTokenUpdate} onTypeUpdate={handleTypeUpdate} />}
-      {secretToken && type === 'manager' ? <><ImageUploader /><SlotBooking /></> : <></>}
+      {
+        !otp ?
+          <EmailScreen onOtpSet={handleOtpUpdate} /> :
+          secretToken ?
+            (type && type === 'manager' ?
+              <DashboardScreen /> : <><ImageUploader /><SlotBooking /></>) :
+            <OTPScreen onSecretTokenSet={handleSecretTokenUpdate} onTypeUpdate={handleTypeUpdate} />
+      }
     </div>
   );
 }
