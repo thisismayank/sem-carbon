@@ -4,7 +4,7 @@ const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const moment = require('moment');
-
+const _ = require("lodash");
 const app = express();
 const port = 8000;
 
@@ -141,6 +141,24 @@ app.post('/v1/slots', (req, res) => {
     }
 
     res.status(200).send({ success: true, message: "Booking made successfully", slot, date, location, bookingDone: true });
+
+
+});
+
+app.get('/v1/slots/available', (req, res) => {
+    console.log('req.query', req.query);
+    const { date, location, slot } = req.body;
+    let bookedSlots = []
+    if (moment(date).isBefore(moment().add(2, 'days'))) {
+        bookedSlots = [...bookedSlotsTwoDaysLater];
+    } else {
+        bookedSlots = [...bookedSlotsBeforeThreePM, ...bookedSlotsAfterThreePM]
+    }
+
+    let availableSlots = _.difference(slots, bookedSlots);
+
+
+    res.status(200).send({ success: true, message: "Bookings fetched successfully", availableSlots, date });
 
 
 });
