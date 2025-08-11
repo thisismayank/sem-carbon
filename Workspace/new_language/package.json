@@ -1,0 +1,43 @@
+{
+  "name": "gymlang",
+  "version": "1.0.0",
+  "description": "A programming language for gym bros, by gym bros. Where every program is a gains program! 💪",
+  "main": "gymlang.js",
+  "bin": {
+    "gymlang": "./gymlang.js"
+  },
+  "keywords": [
+    "programming-language",
+    "gym",
+    "fitness",
+    "bro",
+    "gains",
+    "workout",
+    "fun",
+    "meme"
+  ],
+  "author": "Mayank Arya",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thisismayank/gym_lang.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thisismayank/gym_lang/issues"
+  },
+  "homepage": "https://github.com/thisismayank/gym_lang#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "test": "node gymlang.js test.gym",
+    "demo": "node gymlang.js demo.gym",
+    "repl": "node -e \"require('./gymlang.js').repl()\""
+  },
+  "files": [
+    "gymlang.js",
+    "README.md",
+    "demo.gym",
+    "sample.gym"
+  ]
+}

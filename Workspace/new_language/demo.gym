@@ -1,0 +1,21 @@
+# GymLang Demo - The Ultimate Gym Bro Programming Language
+# This program demonstrates all the gym bro stereotypes in action!
+
+# Set up our starting weights (bro, trust me)
+BRO bench 135
+BRO squat 185
+BRO deadlift 225
+
+BULK bench 10
+FLEX bench
+
+SHRED squat 20
+FLEX squat
+
+PROTEIN deadlift
+FLEX deadlift
+
+LEGDAY squat
+FLEX squat
+
+PUMP squat bench

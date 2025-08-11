@@ -1,0 +1,18 @@
+# Simple GymLang test program
+BRO x 10
+BRO y 5
+
+# Basic operations
+REPS x y 15
+SETS x y 3
+
+# Transformations
+SWOLE x
+BEAST y
+
+# Show results
+FLEX x
+FLEX y
+
+# Motivation
+MOTIVATION "Test completed successfully!" 
